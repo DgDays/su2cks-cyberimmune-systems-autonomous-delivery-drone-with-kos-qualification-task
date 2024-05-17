@@ -125,9 +125,16 @@ int main(void) {
     //If we get here, the drone is able to arm and start the mission
     //The flight is need to be controlled from now on
     //Also we need to check on ORVD, whether the flight is still allowed or it is need to be paused
-
-    while (true)
+    int32_t latitude_p, longitude_p, altitude_p;
+    double latitude, longitude, altitude;
+    while (true){
+	getCoords(latitude_p, longitude_p, altitude_p);
+	latitude = latitude_p / pow(10,7);
+	longitude = longitude_p / pow(10,7);
+	altitude = altitude_p / 100;
+	fprintf(stderr, "\nlatitude: %f\tlongitude: %f\taltitude: %f\n\n", latitude,longitude,altitude);
         sleep(1000);
+	}
 
     return EXIT_SUCCESS;
 }
