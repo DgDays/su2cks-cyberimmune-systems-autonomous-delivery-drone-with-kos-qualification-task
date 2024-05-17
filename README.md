@@ -1,24 +1,47 @@
-# Киберимунный автономный квадрокоптер
+# Киберимунный автономный квадрокоптер квалификационная задача
+Проводим установку необходимых пакетов:
+```bash
+# Получение информации о свежих версиях пакетов для дистрибутива
+sudo apt-get update
 
-Проект представляет собой набор инструментов и решений для создания киберимунного автономного квадрокоптера. Состоит из [ОрВД](orvd) и [наземной станции](planner), [прошивки для квадрокоптера](ardupilot), [симулятора](ardupilot), [модуля безопасности](kos), [документации](docs).
+# Установка необходимых пакетов
+sudo apt-get install -y git make docker-compose docker.io libfuse2
 
-Содержание репозитория:
+# Удаление ненужных пакетов
+sudo apt-get remove modemmanager -y
 
-- [/ardupilot](ardupilot) - прошивка для квадрокоптера и симулятор
-- [/docs](docs) - документация
-- [/kos](kos) - модуль безопасности
-- [/orvd](orvd) - Система организации воздушного движения
-- [/planner](planner) - APM Planner 2 под Linux (наземная станция)
-- [/tests](tests) - тесты проекта
+# Добавления пользователя user в нужные группы
+sudo usermod -aG sudo,docker,dialout user
 
-## Квалификация
+# Клонирование репозитория с симулятором
+git clone https://github.com/DgDays/su2cks-cyberimmune-systems-autonomous-delivery-drone-with-kos-qualification-task.git
+```
+Для выполнения задачи меняем файл `kos/flight_controller/src/main.cpp`
+Добавляем строчки перед `return EXIT_SUCCESS`:
+```cpp
+    int32_t latitude_p, longitude_p, altitude_p;
+    double latitude, longitude, altitude;
+    while (true){
+	getCoords(latitude_p, longitude_p, altitude_p);
+	latitude = latitude_p / pow(10,7);
+	longitude = longitude_p / pow(10,7);
+	altitude = altitude_p / 100;
+	fprintf(stderr, "\nlatitude: %f\tlongitude: %f\taltitude: %f\n\n", latitude,longitude,altitude);
+        sleep(1000);
+	}
+```
+Затем выполняем сборку docker-контейнеров и их запуск командой:
+```bash
+make e2e-offline
+```
+Автоматически запуститься тестировочная миссия для дрона. Входе миссии будут выводиться координаты нашего летательного аппарата.
+Чтобы посмотреть вывод координат можно прописать команду
+```bash
+docker logs kos
+```
+Пример вывода координат:
+```
+latitude: 0.000000      longitude: 0.000000     altitude: 0.000000
 
-Читайте об условиях [квалификации в документе](docs/QUALIFICATION.md) - [Квалификация](docs/QUALIFICATION.md).
-
-## Документация
-
-- [API](docs/API.md) - программный интерфейс модуля безопасности.
-- [Архитектура](docs/ARCHITECTURE.md) - архитектурные диаграмы помогающие понять проект.
-- [Разработка](docs/DEVELOPMENT.md) - документация для разработчика помогающая работать с проектом (установка, настройка, запуск).
-- [Квалификация](docs/QUALIFICATION.md) - квалификационные задания для участников **Киберимунной автономности** на [Архипелаге 2024](https://xn--2035-43davo0a5a6bk9d.xn--p1ai/).
-- [Инструменты](docs/TOOLS.md) - описание инструментов входящих в решение и полезные материалы по работе с ними.
+latitude: 53.101945     longitude: 107.377439   altitude: 846.000000
+```
